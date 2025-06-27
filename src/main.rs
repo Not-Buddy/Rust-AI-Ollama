@@ -2,8 +2,9 @@
 use clap::Parser;
 use std::io::{self, Write};
 
-// Import our custom module
+// Import our custom modules
 mod connecttoollama;
+mod connectlocally;  // Add this new import
 
 #[derive(Parser)]
 #[command(name = "Ollama Client")]
@@ -16,15 +17,21 @@ struct Args {
     /// Skip the menu and test connection
     #[arg(short, long)]
     test: bool,
+    
+    /// Use local Ollama instance instead of remote server
+    #[arg(short, long)]
+    local: bool,
 }
 
 fn display_menu() {
     println!("\n=== Ollama Client Menu ===");
-    println!("1. Generate Response (Interactive)");
-    println!("2. Test Server Connection");
-    println!("3. View Configuration");
-    println!("4. Exit");
-    print!("Choose an option (1-4): ");
+    println!("1. Generate Response (Remote Server)");
+    println!("2. Generate Response (Local)");
+    println!("3. Test Server Connection");
+    println!("4. Test Local Connection");
+    println!("5. View Configuration");
+    println!("6. Exit");
+    print!("Choose an option (1-6): ");
     io::stdout().flush().unwrap();
 }
 
@@ -40,8 +47,8 @@ fn display_config() {
     println!("\n=== Current Configuration ===");
     
     match std::env::var("server_ip") {
-        Ok(ip) => println!("Server IP: {}", ip),
-        Err(_) => println!("Server IP: Not set in .env file"),
+        Ok(ip) => println!("Remote Server IP: {}", ip),
+        Err(_) => println!("Remote Server IP: Not set in .env file"),
     }
     
     match std::env::var("model") {
@@ -49,6 +56,7 @@ fn display_config() {
         Err(_) => println!("Model: llama3.2 (default)"),
     }
     
+    println!("Local Server: http://localhost:11434");
     println!("================================");
 }
 
@@ -59,6 +67,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Handle command line arguments
     if args.test {
         connecttoollama::test_connection().await?;
+        return Ok(());
+    }
+    
+    if args.local {
+        if let Some(prompt) = args.prompt {
+            connectlocally::generate_with_prompt(prompt).await?;
+        } else {
+            connectlocally::generate_response().await?;
+        }
         return Ok(());
     }
     
@@ -79,20 +96,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             },
             "2" => {
+                match connectlocally::generate_response().await {
+                    Ok(_) => println!("✅ Generation completed successfully!"),
+                    Err(e) => println!("❌ Error: {}", e),
+                }
+            },
+            "3" => {
                 match connecttoollama::test_connection().await {
                     Ok(_) => {},
                     Err(e) => println!("❌ Error: {}", e),
                 }
             },
-            "3" => {
+            "4" => {
+                match connectlocally::test_connection().await {
+                    Ok(_) => {},
+                    Err(e) => println!("❌ Error: {}", e),
+                }
+            },
+            "5" => {
                 display_config();
             },
-            "4" => {
+            "6" => {
                 println!("👋 Goodbye!");
                 break;
             },
             _ => {
-                println!("❌ Invalid option. Please choose 1-4.");
+                println!("❌ Invalid option. Please choose 1-6.");
             }
         }
         

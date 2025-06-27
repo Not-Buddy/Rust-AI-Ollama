@@ -1,8 +1,8 @@
 use ollama_rs::{Ollama, generation::completion::request::GenerationRequest};
 use tokio::io::{self, AsyncWriteExt};
 use tokio_stream::StreamExt;
-use std::io::{stdin, stdout, Write};
 use std::time::Instant;
+use std::io::{stdin, stdout, Write};
 
 // Function to get user input with a prompt
 pub fn get_user_input(prompt: &str) -> String {
@@ -14,29 +14,22 @@ pub fn get_user_input(prompt: &str) -> String {
     input.trim().to_string()
 }
 
-
 pub async fn generate_response() -> Result<(), Box<dyn std::error::Error>> {
-    // Load environment variables from .env file
+    // Load environment variables from .env file for model preference
     dotenv::dotenv().ok();
     
-    // Read server IP from .env file
-    let server_ip = std::env::var("server_ip")
-        .expect("server_ip must be set in .env file");
-    
-    // Read model from .env file
+    // Use local model from .env or default
     let model = std::env::var("model")
         .unwrap_or_else(|_| "llama3.2".to_string());
     
     // Get prompt from user
     let user_prompt = get_user_input("Enter your prompt: ");
     
-    // Construct the full server URL
-    let server_url = format!("http://{}", server_ip);
-    println!("Connecting to: {}:11434", server_url);
+    println!("Connecting to: http://localhost:11434");
     println!("Using model: {}", model);
     
-    // Create Ollama client
-    let ollama = Ollama::new(server_url, 11434);
+    // Create Ollama client for localhost
+    let ollama = Ollama::new("http://localhost", 11434);
     
     // Create generation request
     let request = GenerationRequest::new(model, user_prompt);
@@ -129,17 +122,13 @@ pub async fn generate_response() -> Result<(), Box<dyn std::error::Error>> {
 pub async fn generate_with_prompt(prompt: String) -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
     
-    let server_ip = std::env::var("server_ip")
-        .expect("server_ip must be set in .env file");
-    
     let model = std::env::var("model")
         .unwrap_or_else(|_| "llama3.2".to_string());
     
-    let server_url = format!("http://{}", server_ip);
-    println!("Connecting to: {}:11434", server_url);
+    println!("Connecting to: http://localhost:11434");
     println!("Using model: {}", model);
     
-    let ollama = Ollama::new(server_url, 11434);
+    let ollama = Ollama::new("http://localhost", 11434);
     let request = GenerationRequest::new(model, prompt);
     let mut stream = ollama.generate_stream(request).await?;
     let mut stdout = io::stdout();
@@ -158,22 +147,37 @@ pub async fn generate_with_prompt(prompt: String) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
-// Function to test connection to server
+// Function to test connection to local server
 pub async fn test_connection() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv::dotenv().ok();
+    println!("Testing connection to: http://localhost:11434");
     
-    let server_ip = std::env::var("server_ip")
-        .expect("server_ip must be set in .env file");
-    
-    let server_url = format!("http://{}", server_ip);
-    println!("Testing connection to: {}:11434", server_url);
-    
-    let ollama = Ollama::new(server_url, 11434);
+    let ollama = Ollama::new("http://localhost", 11434);
     let request = GenerationRequest::new("llama3.2".to_string(), "Hello".to_string());
     
     match ollama.generate_stream(request).await {
-        Ok(_) => println!("✅ Connection successful!"),
-        Err(e) => println!("❌ Connection failed: {}", e),
+        Ok(_) => println!("✅ Local connection successful!"),
+        Err(e) => println!("❌ Local connection failed: {}", e),
+    }
+    
+    Ok(())
+}
+
+// Function to check available models locally
+pub async fn list_models() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Checking available models on localhost...");
+    
+    let ollama = Ollama::new("http://localhost", 11434);
+    
+    // Note: You might need to check ollama-rs documentation for the correct method
+    // This is a placeholder - adjust based on the actual API
+    match ollama.list_local_models().await {
+        Ok(models) => {
+            println!("Available models:");
+            for model in models {
+                println!("  - {}", model.name);
+            }
+        },
+        Err(e) => println!("❌ Could not list models: {}", e),
     }
     
     Ok(())
