@@ -1,0 +1,4 @@
+//Copy this as .env and change ur server address and model detail
+//Paste it in without " "
+server_ip=
+model=
