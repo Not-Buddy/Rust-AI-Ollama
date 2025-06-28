@@ -4,7 +4,8 @@ use std::io::{self, Write};
 
 // Import our custom modules
 mod connecttoollama;
-mod connectlocally;  // Add this new import
+mod connectlocally;
+mod imagedescriber;  // Add this new import
 
 #[derive(Parser)]
 #[command(name = "Ollama Client")]
@@ -21,6 +22,10 @@ struct Args {
     /// Use local Ollama instance instead of remote server
     #[arg(short, long)]
     local: bool,
+    
+    /// Analyze an image (specify image filename)
+    #[arg(short, long)]
+    image: Option<String>,
 }
 
 fn display_menu() {
@@ -30,8 +35,9 @@ fn display_menu() {
     println!("3. Test Server Connection");
     println!("4. Test Local Connection");
     println!("5. View Configuration");
-    println!("6. Exit");
-    print!("Choose an option (1-6): ");
+    println!("6. Analyze Image");
+    println!("7. Exit");
+    print!("Choose an option (1-7): ");
     io::stdout().flush().unwrap();
 }
 
@@ -57,6 +63,7 @@ fn display_config() {
     }
     
     println!("Local Server: http://localhost:11434");
+    println!("Images Directory: ./images/");
     println!("================================");
 }
 
@@ -67,6 +74,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Handle command line arguments
     if args.test {
         connecttoollama::test_connection().await?;
+        return Ok(());
+    }
+    
+    if let Some(image_file) = args.image {
+        imagedescriber::analyze_specific_image(image_file).await?;
         return Ok(());
     }
     
@@ -117,11 +129,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 display_config();
             },
             "6" => {
+                match imagedescriber::analyze_image().await {
+                    Ok(_) => println!("✅ Image analysis completed successfully!"),
+                    Err(e) => println!("❌ Error: {}", e),
+                }
+            },
+            "7" => {
                 println!("👋 Goodbye!");
                 break;
             },
             _ => {
-                println!("❌ Invalid option. Please choose 1-6.");
+                println!("❌ Invalid option. Please choose 1-7.");
             }
         }
         
