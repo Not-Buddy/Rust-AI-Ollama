@@ -106,12 +106,26 @@ graph TB
     Vision --> ImageLoad[create_image_from_file]
     Vision --> Base64[Base64 encoding]
     
-    style CLI fill:#e1f5fe
-    style Remote fill:#f3e5f5
-    style Local fill:#e8f5e8
-    style Vision fill:#fff3e0
-    style ENV fill:#f1f8e9
-    style Images fill:#f1f8e9
+    %% Darker styling for better text contrast
+    style CLI fill:#1565c0,stroke:#0d47a1,stroke-width:2px,color:#ffffff
+    style Remote fill:#6a1b9a,stroke:#4a148c,stroke-width:2px,color:#ffffff
+    style Local fill:#2e7d32,stroke:#1b5e20,stroke-width:2px,color:#ffffff
+    style Vision fill:#ef6c00,stroke:#bf360c,stroke-width:2px,color:#ffffff
+    style ENV fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#ffffff
+    style Images fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#ffffff
+    style RemoteServer fill:#5d4037,stroke:#3e2723,stroke-width:2px,color:#ffffff
+    style LocalServer fill:#5d4037,stroke:#3e2723,stroke-width:2px,color:#ffffff
+    style OllamaLib fill:#455a64,stroke:#263238,stroke-width:2px,color:#ffffff
+    
+    classDef moduleClass fill:#37474f,stroke:#263238,stroke-width:2px,color:#ffffff
+    classDef menuClass fill:#424242,stroke:#212121,stroke-width:2px,color:#ffffff
+    classDef functionClass fill:#546e7a,stroke:#37474f,stroke-width:2px,color:#ffffff
+    classDef flowClass fill:#795548,stroke:#5d4037,stroke-width:2px,color:#ffffff
+    
+    class Remote,Local,Vision moduleClass
+    class Menu,M1,M2,M3,M4,M5,M6,M7 menuClass
+    class RemoteGen,RemotePrompt,RemoteTest,LocalGen,LocalPrompt,LocalTest,LocalList,VisionAnalyze,VisionSpecific,VisionTest,VisionCore functionClass
+    class Metrics,Stream,Config,ImageList,ImageLoad,Base64,Fallback flowClass
 ```
 
 ## 🛠️ Installation
