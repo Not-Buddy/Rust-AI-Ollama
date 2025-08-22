@@ -19,6 +19,101 @@ A comprehensive Rust application for interacting with Ollama AI models, featurin
 - **Ollama** installed and running
 - **Vision Model** (optional, for image analysis): `ollama pull llava`
 
+
+## Architecture Diagram of this project
+```mermaid
+graph TB
+    %% Main Entry Point
+    CLI[main.rs<br/>CLI Application] --> Parser[clap::Parser<br/>--prompt, --test, --local, --image]
+    
+    %% Core Modules
+    CLI --> Remote[connecttoollama.rs<br/>Remote Server Connection]
+    CLI --> Local[connectlocally.rs<br/>Local Server Connection]
+    CLI --> Vision[imagedescriber.rs<br/>Image Analysis]
+    
+    %% Menu System
+    CLI --> Menu{Interactive Menu}
+    Menu --> M1[1. Remote Generation]
+    Menu --> M2[2. Local Generation]
+    Menu --> M3[3. Test Remote]
+    Menu --> M4[4. Test Local]
+    Menu --> M5[5. View Config]
+    Menu --> M6[6. Analyze Image]
+    Menu --> M7[7. Exit]
+    
+    %% Remote Module Functions
+    Remote --> RemoteGen[generate_response]
+    Remote --> RemotePrompt[generate_with_prompt]
+    Remote --> RemoteTest[test_connection]
+    
+    %% Local Module Functions
+    Local --> LocalGen[generate_response]
+    Local --> LocalPrompt[generate_with_prompt]
+    Local --> LocalTest[test_connection]
+    Local --> LocalList[list_models]
+    
+    %% Vision Module Functions
+    Vision --> VisionAnalyze[analyze_image]
+    Vision --> VisionSpecific[analyze_specific_image]
+    Vision --> VisionTest[test_vision_model]
+    Vision --> VisionCore[analyze_image_with_prompt]
+    
+    %% External Dependencies
+    ENV[.env file<br/>server_ip, model, vision_model] --> Remote
+    ENV --> Local
+    ENV --> Vision
+    
+    Images[./images/ directory<br/>jpg, png, gif, etc.] --> Vision
+    
+    %% Ollama Servers
+    RemoteServer[Remote Ollama Server<br/>http://server_ip:11434] --> Remote
+    RemoteServer --> Vision
+    
+    LocalServer[Local Ollama Server<br/>http://localhost:11434] --> Local
+    LocalServer --> Vision
+    
+    %% Ollama-rs Library
+    OllamaLib[ollama-rs crate<br/>Ollama, GenerationRequest, Image] --> Remote
+    OllamaLib --> Local
+    OllamaLib --> Vision
+    
+    %% Data Flow
+    M1 --> RemoteGen
+    M2 --> LocalGen
+    M3 --> RemoteTest
+    M4 --> LocalTest
+    M5 --> Config[Display Configuration]
+    M6 --> VisionAnalyze
+    
+    %% Fallback Logic
+    Vision -.->|Fallback| LocalServer
+    Vision --> Fallback{Remote Failed?}
+    Fallback -->|Yes| LocalServer
+    Fallback -->|No| RemoteServer
+    
+    %% Performance Metrics
+    RemoteGen --> Metrics[Performance Metrics<br/>Tokens/sec, Timing]
+    LocalGen --> Metrics
+    VisionCore --> Metrics
+    
+    %% Streaming Responses
+    RemoteGen --> Stream[Streaming Output<br/>Real-time token display]
+    LocalGen --> Stream
+    VisionCore --> Stream
+    
+    %% Image Processing
+    Vision --> ImageList[list_images]
+    Vision --> ImageLoad[create_image_from_file]
+    Vision --> Base64[Base64 encoding]
+    
+    style CLI fill:#e1f5fe
+    style Remote fill:#f3e5f5
+    style Local fill:#e8f5e8
+    style Vision fill:#fff3e0
+    style ENV fill:#f1f8e9
+    style Images fill:#f1f8e9
+```
+
 ## 🛠️ Installation
 
 1. **Clone the repository:**
